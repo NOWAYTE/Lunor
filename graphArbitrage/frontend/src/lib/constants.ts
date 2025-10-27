@@ -1,3 +1,6 @@
+import { Home } from "~/icons/home"
+import { Explore } from "~/icons/explore"
+import MoneyIcon from "~/icons/money-icon";
 
 export const NAV_ITEMS = [
     { href: '/', label: 'Dashboard' },
@@ -341,3 +344,43 @@ export const WATCHLIST_TABLE_HEADER = [
 
 
 export type TradingViewConfig =  Record<string, any>
+
+export type MenuProps = {
+    id: number;
+    label: string;
+    icon: React.FC<React.SVGProps<SVGSVGElement>>;
+    path: string;
+    section: boolean;
+}
+
+export const LUNORU_MENU: MenuProps[] = [
+    {
+        id: 0,
+        label: "Home",
+        icon: Home,
+        path: "/",
+        section: true,
+    },
+    {
+        id: 1,
+        label: "Pricing",
+        icon: MoneyIcon,
+        path: "#Pricing",
+        section: true,
+    },
+    {
+        id: 2,
+        label: "Resources",
+        icon: Explore,
+        path: "#Resources",
+        section: true,
+    },
+]
+
+type LunoruConstantsProps = {
+    landingPageMenu: MenuProps[];
+}
+
+export const LUNORU_CONSTANTS: LunoruConstantsProps = {
+    landingPageMenu: LUNORU_MENU,
+}

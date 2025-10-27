@@ -2,11 +2,11 @@
 "use client"
 import React, { useEffect, useRef, memo } from 'react';
 import type { TradingViewConfig } from '~/lib/constants';
-import useTradingViewWidget from '~/app/hooks/useTradingViewWidget';
+import useTradingViewWidget from '~/app/hooks/trading/useTradingViewWidget';
 import { cn } from '~/lib/utils';
 
 interface UseTradingViewWidgetProps {
-    title: string;
+    title?: string;
     scriptUrl: string;
     config: TradingViewConfig;
     height: number;

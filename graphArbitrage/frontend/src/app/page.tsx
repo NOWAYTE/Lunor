@@ -1,4 +1,3 @@
-
 import { headers } from "next/headers"
 import { auth } from "~/lib/auth"
 import { redirect } from "next/navigation"
@@ -9,6 +8,8 @@ import {
   MARKET_OVERVIEW_WIDGET_CONFIG,
   TOP_STORIES_WIDGET_CONFIG,
 } from "~/lib/constants"
+import CallToAction from "~/components/landing/call-to-action"
+import LandingPageNavbar from "~/components/landing/navbar"
 
 export default async function Page() {
   const session = await auth.api.getSession({
@@ -23,6 +24,10 @@ export default async function Page() {
 
   return (
     <div className="flex min-h-screen flex-col gap-10 py-8">
+      <section className="container">
+        <LandingPageNavbar />
+        <CallToAction />
+      </section>
       <section className="container grid grid-cols-1 gap-8 xl:grid-cols-3">
         <TradingViewWidget
           title="Market Overview"
@@ -44,7 +49,6 @@ export default async function Page() {
 
       <section className="container grid grid-cols-1 gap-8 xl:grid-cols-3">
         <TradingViewWidget
-          title="Top Stories"
           scriptUrl={`${scriptUrl}timeline.js`}
           config={TOP_STORIES_WIDGET_CONFIG}
           className={cardClass}
@@ -52,7 +56,6 @@ export default async function Page() {
         />
         <div className="xl:col-span-2">
           <TradingViewWidget
-            title="Market Data"
             scriptUrl={`${scriptUrl}market-quotes.js`}
             config={MARKET_DATA_WIDGET_CONFIG}
             className={cardClass}
