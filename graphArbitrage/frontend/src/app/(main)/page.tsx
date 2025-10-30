@@ -1,6 +1,3 @@
-import { headers } from "next/headers"
-import { auth } from "~/lib/auth"
-import { redirect } from "next/navigation"
 import TradingViewWidget from "~/components/trading/tradingViewWidgets"
 import {
   HEATMAP_WIDGET_CONFIG,
@@ -13,26 +10,22 @@ import CallToAction from "~/components/landing/call-to-action"
 import LandingPageNavbar from "~/components/landing/navbar"
 
 export default async function Page() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  })
-  if (!session) redirect("/auth/sign-in")
-
+ 
   const scriptUrl =
     "https://s3.tradingview.com/external-embedding/embed-widget-"
 
   const cardClass = "scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200" 
 
   return (
-    <div className="flex min-h-screen flex-col gap-10 py-8">
-      <section className="container h-screen">
+    <div className="flex min-h-screen flex-col gap-10 pb-8">
+      <section className="container mt-8">
         <LandingPageNavbar />
         <CallToAction />
          <TradingViewWidget
           scriptUrl={`${scriptUrl}advanced-chart.js`}
           config={ADVANCED_CHART_WIDGET_CONFIG("OANDA:EURUSD")}
           className={cardClass}
-          height={1000}
+          height={800}
         />
       </section>
       <section className="container grid grid-cols-1 gap-8 xl:grid-cols-3">

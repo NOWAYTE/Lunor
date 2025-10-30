@@ -15,7 +15,7 @@ const Menu = ({ orientation }: MenuProps) => {
   switch (orientation) {
     case "desktop":
       return (
-        <Card className="bg-themeBlack border-[#032E11] bg-clip-padding backdrop--blur__safari backdrop-filter backdrop-blur-2xl bg-opacity-60 p-1 lg:flex hidden rounded-xl text-themeTextWhite">
+        <Card className="bg-themeBlack border bg-clip-padding backdrop--blur__safari backdrop-filter backdrop-blur-2xl bg-opacity-60 p-1 lg:flex hidden rounded-xl text-themeTextWhite">
           <CardContent className="p-0 flex gap-2">
             {LUNORU_CONSTANTS.landingPageMenu.map((menuItem) => {
               const Icon = menuItem.icon;

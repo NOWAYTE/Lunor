@@ -289,6 +289,8 @@ withdateranges: false,
 compareSymbols: [],
 studies: [],
 autosize: true,
+width: '100%',
+height: 800,
 });
 
 export const POPULAR_STOCK_SYMBOLS = [
@@ -416,3 +418,20 @@ type LunoruConstantsProps = {
 export const LUNORU_CONSTANTS: LunoruConstantsProps = {
     landingPageMenu: LUNORU_MENU,
 }
+
+ export const sidebarMenuItems: MenuProps[] = [
+    {
+        id: 0,
+        label: "Dashboard",
+        icon: Home,
+        path: "/dashboard",
+        section: true,
+    },
+    {
+        id: 1,
+        label: "Settings",
+        icon: MoneyIcon,
+        path: "/settings",
+        section: true,
+    },
+]

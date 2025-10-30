@@ -25,19 +25,20 @@ const LandingPageNavbar = (props: Props) => {
   return (
     <div
       className="w-full flex justify-between sticky top-0 items-center text-themeTextWhite
-    py-5 z-50 px-4 md:px-6"
+    pb-10 z-50 px-4 md:px-6"
     >
-      <div>
-        <Image src="/images/Lan.png" width={150} height={150} alt="Logo" className="w-24 md:w-32 lg:w-40" />
+      <div className="flex items-center">
+        <Image src="/images/lunoru-1.png" width={150} height={150} alt="Logo" className="w-6 md:w-8 lg:w-10" />
+        <span className="text-2xl font-thin md:font-bold ml-2">Lunoru</span>
       </div>
       <div className="hidden lg:block">
         <Menu orientation="desktop" />
       </div>
-      <div className="flex gap-2 items-center">
+      <div className="flex gap-2 items-center justify-center">
         <Link href="/dashboard" className="hidden sm:block">
           <Button
             variant="outline"
-            className="bg-emerald-600 rounded-2xl flex gap-2 border-themeGray hover:bg-emerald-500 text-themeBlack"
+            className="bg-emerald-600 rounded-2xl flex gap-2 border-themeGray hover:bg-emerald-500 text-themeBlack items-center justify-center mx-auto"
           >
             <Logout />
             <span className="hidden sm:inline">Login</span>
@@ -58,7 +59,7 @@ const LandingPageNavbar = (props: Props) => {
             <Link href="/dashboard" className="block sm:hidden mt-4">
               <Button
                 variant="outline"
-                className="w-full bg-themeBlack rounded-2xl flex gap-2 border-themeGray hover:bg-themeGray"
+                className="w-full bg-themeBlack rounded-2xl flex gap-2 border-themeGray hover:bg-themeGray items-center justify-evenly mx-auto"
               >
                 <Logout />
                 Login

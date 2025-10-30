@@ -23,6 +23,15 @@ model User {
 
   @@unique([email])
   @@map("user")
+  
+  // relations
+  brokerAccounts        BrokerAccount[]
+  journals        JournalEntry[]
+  trades          Trade[]
+  emotions        EmotionRecord[]
+  alerts          Alert[]
+  aiInsights      AIInsight[]
+  backtests       Backtest[]
 }
 
 model Session {
@@ -68,4 +77,149 @@ model Verification {
   updatedAt  DateTime @default(now()) @updatedAt
 
   @@map("verification")
+}
+
+model BrokerAccount {
+  id               String   @id @default(cuid())
+  userId           String
+  metaApiAccountId String   // ID returned by MetaApi
+  brokerName       String
+  platform         String   // "mt4" or "mt5"
+  server           String
+  accountNumber    String
+  status           BrokerAccountStatus @default(INITIALIZING)
+  createdAt        DateTime @default(now())
+  lastSyncedAt     DateTime?
+
+  user   User    @relation(fields: [userId], references: [id])
+  trades Trade[]
+}
+
+enum BrokerAccountStatus {
+  INITIALIZING
+  ACTIVE
+  DISCONNECTED
+  ERROR
+}
+
+
+model Trade {
+  id              String    @id @default(cuid())
+  brokerAccountId String
+  userId          String
+  symbol          String
+  tradeType       TradeType // BUY / SELL
+  lotSize         Float
+  entryPrice      Float
+  exitPrice       Float
+  profitLoss      Float
+  openTime        DateTime
+  closeTime       DateTime
+  session         SessionType? // London, NY, Asia
+  strategyTag     String?
+  riskReward      Float?
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  // Relations
+  brokerAccount   BrokerAccount @relation(fields: [brokerAccountId], references: [id])
+  user            User          @relation(fields: [userId], references: [id])
+  journalEntries  JournalEntry[]
+}
+
+enum TradeType {
+  BUY
+  SELL
+}
+
+enum SessionType {
+  ASIA
+  LONDON
+  NEWYORK
+}
+
+model JournalEntry {
+  id          String    @id @default(cuid())
+  userId      String
+  tradeId     String?
+  title       String?
+  content     String
+  voiceUrl    String?     // audio journaling file
+  transcript  String?     // AI-transcribed text
+  sentiment   Sentiment?  // POSITIVE / NEUTRAL / NEGATIVE
+  tags        String[]    // ["setup", "discipline", "mistake"]
+  createdAt   DateTime    @default(now())
+
+  user        User        @relation(fields: [userId], references: [id])
+  trade       Trade?      @relation(fields: [tradeId], references: [id])
+}
+
+enum Sentiment {
+  POSITIVE
+  NEGATIVE
+  NEUTRAL
+}
+
+model EmotionRecord {
+  id          String   @id @default(cuid())
+  userId      String
+  emotion     EmotionType
+  intensity   Int      // 1–10
+  notedAt     DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+enum EmotionType {
+  CALM
+  FEAR
+  GREED
+  REVENGE
+  CONFIDENCE
+  ANXIETY
+}
+
+model Backtest {
+  id            String   @id @default(cuid())
+  userId        String
+  strategyName  String
+  symbol        String
+  timeframe     String
+  totalTrades   Int
+  winRate       Float
+  profitFactor  Float
+  avgRR         Float
+  notes         String?
+  createdAt     DateTime @default(now())
+
+  user          User     @relation(fields: [userId], references: [id])
+}
+
+model Alert {
+  id           String   @id @default(cuid())
+  userId       String
+  type         AlertType
+  symbol       String?
+  triggerValue Float?
+  message      String?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id])
+}
+
+enum AlertType {
+  PRICE
+  BEHAVIOR
+  SESSION
+}
+
+model AIInsight {
+  id          String    @id @default(cuid())
+  userId      String
+  summary     String
+  recommendation String?
+  createdAt   DateTime  @default(now())
+
+  user        User      @relation(fields: [userId], references: [id])
 }

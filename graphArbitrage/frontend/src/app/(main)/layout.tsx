@@ -5,6 +5,9 @@ import { Geist } from "next/font/google";
 import { Toaster } from "~/components/ui/sonner";
 import { Providers } from "~/components/provider";
 import { ThemeProvider } from "~/components/theme-provider";
+import { SidebarProvider, SidebarTrigger } from "~/components/ui/sidebar";
+import { AppSidebar } from "~/components/app-sidebar";
+
 
 export const metadata: Metadata = {
   title: "Lunor",
@@ -25,7 +28,7 @@ export default function RootLayout({
       <body>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
         <Providers>
-        {children}
+            {children}
         <Toaster />
         </Providers>
         </ThemeProvider>

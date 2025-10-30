@@ -362,7 +362,6 @@
   }
 }
 
-
 scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -470,4 +469,65 @@ scrollbar-hide {
 
 .scrollbar-hide-default::-webkit-scrollbar-thumb:hover {
   background-color: #9095A1;
+}
+
+.radial {
+  background-image: radial-gradient(
+    ellipse farthest-side,
+    rgba(16, 185, 129, 0.1),  /* emerald-500/10 */
+    rgba(16, 185, 129, 0.3),  /* emerald-500/30 */
+    #716768,
+    black
+  );
+  background-size: 100% 90%;
+  background-repeat: no-repeat;
+}
+.text-gradient {
+  background: linear-gradient(to right, #1f2937, white, #b2c7c0);
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-radial {
+  background-image: radial-gradient(
+    ellipse farthest-side,
+    rgba(113, 103, 104, 0.2) 30%,
+    black 70%
+  );
+  background-size: 100% 50%;
+  background-repeat: no-repeat;
+}
+
+.text-radial--circle {
+  background-image: radial-gradient(
+    circle farthest-side,
+    rgba(113, 103, 104, 0.35) 20%,
+    black 70%
+  );
+  background-size: 50% 70%;
+  background-repeat: no-repeat;
+  background-position: top center;
+}
+
+.backdrop--blur__safari {
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.radial--blur {
+  -webkit-backdrop-filter: blur(100px);
+  filter: blur(100px);
+  background: #379B59;
+}
+
+@media only screen and (max-width: 800px) {
+  .text-radial--circle {
+    background-image: radial-gradient(
+      circle farthest-side,
+      rgba(113, 103, 104, 0.2) 20%,
+      black 70%
+    );
+    background-size: 100% 50%;
+    background-repeat: no-repeat;
+    background-position: top center;
+  }
 }
