@@ -427,11 +427,35 @@ export const LUNORU_CONSTANTS: LunoruConstantsProps = {
         path: "/dashboard",
         section: true,
     },
+]
+
+export const settingsMenuItems: MenuProps[] = [
     {
-        id: 1,
-        label: "Settings",
-        icon: MoneyIcon,
-        path: "/settings",
+        id: 0,
+        label: "Account Settings",
+        icon: Home,
+        path: "",
         section: true,
     },
+    {
+        id: 1,
+        label: "Email & Password",
+        icon: Home,
+        path: "",
+        section: true,
+    },
+    {
+        id: 2,
+        label: "Notifications",
+        icon: Home,
+        path: "",
+        section: true,
+    },
+    {
+        id: 3,
+        label: "intergrations",
+        icon: Home,
+        path: "",
+        section: true,
+    }
 ]
