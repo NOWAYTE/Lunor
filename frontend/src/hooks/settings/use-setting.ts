@@ -28,21 +28,41 @@ export const useIntegration = () => {
     const toastId = toast.loading("Connecting to broker...");
 
     try {
+      console.log("Submitting form values:", values);
+      
       const res = await fetch("/api/broker", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
         body: JSON.stringify(values),
       });
-      const data = await res.json();
-      if (!data?.ok) {
+      
+      console.log("Response status:", res.status);
+      let data;
+      try {
+        data = await res.json();
+        console.log("Response data:", data);
+      } catch (e) {
+        console.error("Failed to parse JSON response:", e);
+        throw new Error("Invalid response from server");
+      }
+      
+      if (!res.ok || !data?.ok) {
         // Capture and log message + details per MetaAPI validation error format
-        const message = data?.message || data?.friendly || data?.error || "Failed to connect";
+        const message = data?.message || data?.friendly || data?.error || `Failed to connect (${res.status} ${res.statusText})`;
         const details = data?.details;
-        console.error("Broker connection failed:", { status: data?.status, error: data?.error, message, details });
+        console.error("Broker connection failed:", { 
+          status: res.status, 
+          statusText: res.statusText,
+          data,
+          message, 
+          details 
+        });
         // Show toast with message; append short details if it's a string
         const detailsSuffix = typeof details === 'string' ? `: ${details}` : '';
         toast.error(`${message}${detailsSuffix}`, { id: toastId });
-        setLoading(false);
         return;
       }
 

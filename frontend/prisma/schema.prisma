@@ -82,9 +82,9 @@ model Verification {
 model BrokerAccount {
   id               String   @id @default(cuid())
   userId           String
-  metaApiAccountId String   // ID returned by MetaApi
+  metaApiAccountId String   @unique 
   brokerName       String
-  platform         String   // "mt4" or "mt5"
+  platform         String   
   server           String
   accountNumber    String
   status           BrokerAccountStatus @default(INITIALIZING)

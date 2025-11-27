@@ -5,11 +5,7 @@ import type { BrokerFormValues } from "~/lib/validations/broker/broker";
 const META_API_TOKEN = process.env.META_API_ACCESS_TOKEN;
 const META_API_PROVISIONING_URL = process.env.META_API_PROVISIONING_URL
 
-export const onSubmitBrokerDetails = async (values: BrokerFormValues) => {
-  const session = await authClient.getSession();
-  const userId = session?.data?.user?.id;
-  if (!userId) return { success: false, message: "User not authenticated" };
-
+export const onSubmitBrokerDetails = async (values: BrokerFormValues & { userId: string }) => {
   try {
     const { brokerName, platform, server, accountNumber, password } = values;
 
@@ -52,12 +48,12 @@ export const onSubmitBrokerDetails = async (values: BrokerFormValues) => {
       return { success: false, message };
     }
 
-    const brokerAccount = await client.brokeraccount.upsert({
+    const brokerAccount = await client.brokerAccount.upsert({
       where: {
         metaApiAccountId: metaRes.id,
       },
       create: {
-        userId,
+        userId: values.userId,
         metaApiAccountId: metaRes.id,
         brokerName,
         platform,
@@ -66,6 +62,7 @@ export const onSubmitBrokerDetails = async (values: BrokerFormValues) => {
         status: "INITIALIZING",
       },
       update: {
+        userId: values.userId,
         brokerName,
         platform,
         server,
