@@ -6,8 +6,11 @@ export type BrokerFormValues = {
   accountNumber: string; // MetaTrader login
   brokerName: string;    // Account name
   platform: string;      // mt4 | mt5
-  server: string;        // MetaTrader server name
+  server: string;       // MetaTrader server name
   password: string;      // MetaTrader password (investor or master)
+  userId?: string;
+  region?: string;
+  maggic?: number;
 };
 
 export const brokerFormSchema = z.object({

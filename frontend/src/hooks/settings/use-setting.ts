@@ -11,12 +11,13 @@ export const useIntegration = () => {
   const openModal = () => setOpen(true);
   const closeModal = () => setOpen(false);
 
+  // FIX: Ensure 'MT4' is used for the default platform
   const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<BrokerFormValues>({
     resolver: zodResolver(brokerFormSchema),
     defaultValues: {
       server: "",
       brokerName: "",
-      platform: "",
+      platform: "MT4", // Default platform is necessary here
       accountNumber: "",
       password: "",
     },
@@ -25,13 +26,13 @@ export const useIntegration = () => {
 
   const onSubmit = handleSubmit(async (values: BrokerFormValues) => {
     setLoading(true);
-    const toastId = toast.loading("Connecting to broker...");
+    const toastId = toast.loading("Connecting to broker and provisioning server (This may take up to 90 seconds)..."); 
 
     try {
       console.log("Submitting form values:", values);
       
       const res = await fetch("/api/broker", {
-        method: "POST",
+        method: "POST", // This is the POST request for submission
         headers: { 
           "Content-Type": "application/json",
           "Accept": "application/json"
@@ -39,50 +40,30 @@ export const useIntegration = () => {
         body: JSON.stringify(values),
       });
       
-      console.log("Response status:", res.status);
       let data;
       try {
         data = await res.json();
-        console.log("Response data:", data);
       } catch (e) {
         console.error("Failed to parse JSON response:", e);
-        throw new Error("Invalid response from server");
+        throw new Error("Invalid response from server or server crashed.");
       }
       
       if (!res.ok || !data?.ok) {
-        // Capture and log message + details per MetaAPI validation error format
-        const message = data?.message || data?.friendly || data?.error || `Failed to connect (${res.status} ${res.statusText})`;
-        const details = data?.details;
-        console.error("Broker connection failed:", { 
-          status: res.status, 
-          statusText: res.statusText,
-          data,
-          message, 
-          details 
-        });
-        // Show toast with message; append short details if it's a string
-        const detailsSuffix = typeof details === 'string' ? `: ${details}` : '';
-        toast.error(`${message}${detailsSuffix}`, { id: toastId });
+        const message = data?.message || data?.error || `Failed to connect (Status: ${res.status})`;
+        console.error("Broker connection failed:", { status: res.status, data });
+        toast.error(message, { id: toastId });
         return;
       }
 
-      const brokerId = data.brokerAccount.metaApiAccountId;
-      toast.success("Connected. Initializing...", { id: toastId });
-
-      let status = data.brokerAccount.status;
-      const maxRetries = 10;
-      let retries = 0;
-
-      while (status === "INITIALIZING" && retries < maxRetries) {
-        await new Promise(r => setTimeout(r, 3000));
-        const statusRes = await fetch(`/api/broker/status/${brokerId}`);
-        const statusData = await statusRes.json();
-        status = statusData.status;
-        retries++;
+      const finalStatus = data.brokerAccount.status; 
+      
+      if (finalStatus === 'ACTIVE') {
+        toast.success("Broker account successfully connected and is ACTIVE!", { id: toastId });
+      } else {
+        toast.error(`Provisioning returned unexpected status: ${finalStatus}`, { id: toastId });
       }
 
-      toast.success(`Final broker status: ${status}`, { id: toastId });
-      console.log("Final broker status:", status);
+      console.log("Final broker status:", finalStatus);
 
       reset();
       closeModal();
@@ -94,7 +75,6 @@ export const useIntegration = () => {
       setLoading(false);
     }
   }, (formErrors) => {
-    // Invalid submission: show a toast so the user knows why nothing happens
     const firstKey = Object.keys(formErrors)[0] as keyof BrokerFormValues | undefined;
     const msg = firstKey && formErrors[firstKey]?.message ? String(formErrors[firstKey]?.message) : "Please fix the highlighted errors";
     toast.error(msg);

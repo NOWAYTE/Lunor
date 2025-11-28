@@ -5,7 +5,7 @@ import { useIntegration } from "~/hooks/settings/use-setting";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import TextInput from "../ui/textInput";
-import { FaSearch, FaChevronDown } from "react-icons/fa";
+import { FaChevronDown } from "react-icons/fa";
 import { ServerInput } from "../ui/serverInput";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "../ui/dropdown-menu";
 
@@ -22,67 +22,104 @@ export default function Integration() {
     setValue,
   } = useIntegration();
 
+  // --- STATE AND REFS ---
   const [servers, setServers] = useState<string[]>([]);
   const [searching, setSearching] = useState<boolean>(false);
-  const [searchCache, setSearchCache] = useState<Record<string, { servers: string[]; platform?: string | null; brokers?: string[] }>>({});
+  const [searchCache, setSearchCache] = useState<Record<string, { servers: string[]; platform?: string | null; brokers?: string[] }>>({}); 
 
+  // FIX: Declared missing variables
+  const serverQuery = watch("server");
+  const lastRequestTime = useRef<number>(0);
+
+  // --- EFFECTS ---
   useEffect(() => {
     register("server");
     register("brokerName");
     register("platform");
     register("accountNumber");
     register("password");
-    // register("region"); // if applicable
   }, [register]);
 
   useEffect(() => {
-    const q = watch("server")?.trim();
-    if (!q || q.length < 2) return;
+    const q = serverQuery?.trim();
+    
+    // Clear servers if query is too short or empty
+    if (!q || q.length < 2) {
+      setServers([]); 
+      return;
+    }
+
+    // Debounce the API call
     const id = setTimeout(() => {
-      handleServerSearch();
+      handleServerSearch(q);
     }, 300);
+
     return () => clearTimeout(id);
-  }, [watch("server")]);
+  }, [serverQuery]); 
 
-  const handleServerSearch = async () => {
-    const query = watch("server")?.trim();
-    if (!query) return;
-
+  // --- HANDLER ---
+  const handleServerSearch = async (query: string) => {
     const key = query.toLowerCase();
+    
+    // 1. Check Cache
     const cached = searchCache[key];
-    // only set default values if not yet filled by user
-    if (!watch("platform") && cached?.platform) {
-      setValue("platform", String(cached.platform).toLowerCase());
+    if (cached) {
+      setServers(cached.servers || []);
+      
+      // FIX: Check if the current value is the DEFAULT "MT4" or empty before overwriting
+      const currentPlatform = watch("platform");
+      if ((!currentPlatform || currentPlatform.toUpperCase() === "MT4") && cached.platform) {
+         setValue("platform", String(cached.platform).toLowerCase());
+      }
+      
+      if (!watch("brokerName") && Array.isArray(cached.brokers) && cached.brokers[0]) {
+        setValue("brokerName", String(cached.brokers[0]));
+      }
+      return; 
     }
-    if (!watch("brokerName") && Array.isArray(cached?.brokers) && cached?.brokers[0]) {
-      setValue("brokerName", String(cached.brokers[0]));
-    }
-    // never overwrite server input
 
-
+    // 2. Prepare Network Request
     setSearching(true);
+    const requestTime = Date.now();
+    lastRequestTime.current = requestTime;
+
     try {
       const res = await fetch(`/api/broker?q=${encodeURIComponent(query)}`);
+      
+      // 3. RACE CONDITION CHECK: If a newer request started while we were waiting, ignore this result.
+      if (requestTime !== lastRequestTime.current) return;
+
       const data = await res.json();
+      
       if (data.ok) {
         const nextServers = Array.isArray(data.servers) ? data.servers : [];
         setServers(nextServers);
-        if (data.platform) setValue("platform", String(data.platform).toLowerCase());
+
+        // FIX: Allow overwriting if current is just the default "MT4"
+        const currentPlatform = watch("platform");
+        if (data.platform && (!currentPlatform || currentPlatform.toUpperCase() === "MT4")) {
+            setValue("platform", String(data.platform).toLowerCase());
+        }
+
         if (Array.isArray(data.brokers) && !watch("brokerName")) {
           setValue("brokerName", String(data.brokers[0] ?? ""));
         }
+
         setSearchCache((prev) => ({
           ...prev,
           [key]: { servers: nextServers, platform: data.platform ?? null, brokers: data.brokers },
         }));
       } else {
         setServers([]);
-        setSearchCache((prev) => ({ ...prev, [key]: { servers: [] } }));
       }
-    } catch {
+    } catch (error) {
+      console.error("Search failed", error);
       setServers([]);
     } finally {
-      setSearching(false);
+      // Only turn off loading if this was the last request
+      if (requestTime === lastRequestTime.current) {
+        setSearching(false);
+      }
     }
   };
 
@@ -108,15 +145,16 @@ export default function Integration() {
             </DialogHeader>
 
             <form onSubmit={onSubmit} className="flex flex-col gap-6 mt-4">
-              {/* All inputs in the same responsive grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 items-start justify-start content-start">
+                
+                {/* SERVER INPUT */}
                 <div className="max-w-sm w-full">
                   <ServerInput
                     label="Server"
                     servers={servers}
                     value={watch("server") ?? ""}
-                    onChange={(val) => setValue("server", val)}
-                    onSearch={handleServerSearch}
+                    onChange={(val) => setValue("server", val, { shouldValidate: true })}
+                    onSearch={() => handleServerSearch(watch("server") || '')}
                     loading={searching}
                   />
                   {errors.server && (
@@ -124,6 +162,7 @@ export default function Integration() {
                   )}
                 </div>
 
+                {/* BROKER NAME */}
                 <div className="max-w-sm w-full">
                   <TextInput
                     label="Broker Name"
@@ -133,6 +172,7 @@ export default function Integration() {
                   />
                 </div>
 
+                {/* PLATFORM SELECT */}
                 <div className="max-w-sm w-full">
                   <label className="text-sm font-medium mb-1 text-gray-300 block">Platform</label>
                   <DropdownMenu>
@@ -159,25 +199,32 @@ export default function Integration() {
                   </DropdownMenu>
                 </div>
 
+                {/* ACCOUNT NUMBER */}
                 <div className="max-w-sm w-full">
                   <TextInput
                     label="Account Number"
-                    placeholder="Account Number"
+                    placeholder="Enter account number"
+                    type="text"
                     value={watch("accountNumber") ?? ""}
-                    onChange={(val) => setValue("accountNumber", val)}
-                    
+                    onChange={(val) => setValue("accountNumber", val, { shouldValidate: true })}
                   />
+                  {errors.accountNumber && (
+                    <p className="text-destructive text-sm mt-1">{errors.accountNumber.message}</p>
+                  )}
                 </div>
 
+                {/* PASSWORD */}
                 <div className="max-w-sm w-full">
                   <TextInput
                     label="Password"
-                    placeholder="MetaTrader password"
+                    placeholder="Enter password"
                     type="password"
                     value={watch("password") ?? ""}
-                    onChange={(val) => setValue("password", val)}
-                    
+                    onChange={(val) => setValue("password", val, { shouldValidate: true })}
                   />
+                  {errors.password && (
+                    <p className="text-destructive text-sm mt-1">{errors.password.message}</p>
+                  )}
                 </div>
               </div>
 
