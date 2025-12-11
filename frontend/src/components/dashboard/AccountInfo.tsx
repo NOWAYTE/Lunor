@@ -1,72 +1,132 @@
-import React from 'react';
-import { RefreshCcw, MoreVertical, LayoutGrid } from 'lucide-react';
+import React from 'react'
+import { LayoutGrid, MoreVertical, RefreshCcw, Wallet, Gauge, TrendingUp } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
+import { Button } from '~/components/ui/button'
+import { Separator } from '~/components/ui/separator'
 
-// --- Type Definitions ---
-
-interface TabProps {
-  name: string;
-  isActive: boolean;
-  icon: React.ReactNode; 
+type AccountInfoProps = {
+  account: {
+    id: string
+    brokerName: string | null
+    accountNumber: string | null
+    platform: string | null
+    status: string | null
+    createdAt?: Date | string | null
+    lastSyncedAt?: Date | string | null
+  } | null
+  metrics: {
+    totalTrades: number
+    winningTrades: number
+    totalPL: number
+    winRate: number
+    activeAccounts: number
+    totalAccounts: number
+    dominantEmotion: string
+  }
 }
 
-// --- Component Definitions ---
+const formatDate = (value?: Date | string | null) => {
+  if (!value) return '—'
+  const date = new Date(value)
+  return date.toLocaleString()
+}
 
-const Tab: React.FC<TabProps> = ({ name, isActive, icon }) => {
-    const activeClass = isActive 
-        ? 'text-white border-blue-500 font-medium' 
-        : 'text-gray-400 border-transparent hover:text-white transition';
+const StatPill = ({ label, value }: { label: string; value: string | number }) => (
+  <div className="rounded-full border border-border/60 bg-muted/40 px-3 py-1 text-xs text-muted-foreground">
+    <span className="font-medium text-foreground">{value}</span>
+    <span className="mx-1 text-muted-foreground">•</span>
+    <span>{label}</span>
+  </div>
+)
 
-    return (
-        <a href="#" className={`flex items-center space-x-2 pb-3 border-b-2 ${activeClass}`}>
-            {icon}
-            <span className="text-sm">{name}</span>
-        </a>
-    );
-};
+const StatCard = ({
+  label,
+  value,
+  icon,
+}: {
+  label: string
+  value: string | number
+  icon: React.ReactNode
+}) => {
+  return (
+    <Card className="border-border/50 bg-zinc-900/50">
+      <CardContent className="flex items-center gap-3 py-4">
+        <div className="rounded-lg bg-zinc-800 p-2 text-muted-foreground">{icon}</div>
+        <div>
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+          <p className="text-lg font-semibold text-foreground">{value}</p>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
 
-const AccountInfo: React.FC = () => {
-  const darkBg = 'bg-[#1e2025]'; 
-  const accentGreen = 'text-[#50c878]'; 
+const AccountInfo: React.FC<AccountInfoProps> = ({ account, metrics }) => {
+  const accountLabel = account?.brokerName || 'Broker Account'
+  const accountNumber = account?.accountNumber || '—'
+  const platform = account?.platform || 'Unknown platform'
+  const status = account?.status || 'UNKNOWN'
 
   return (
-    <header className={`p-4 text-white`}>
-      <div className="flex justify-between items-center">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center">
-            <LayoutGrid className="w-5 h-5 text-black" />
+    <Card className="border-border/50 bg-zinc-900/60">
+      <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-3">
+          <div className="grid size-11 place-items-center rounded-xl bg-zinc-800 text-amber-300">
+            <LayoutGrid className="size-5" />
           </div>
-          <div>
-            <div className="text-sm text-gray-400">Main Account • Bybit</div>
-            <div className="flex items-baseline space-x-2">
-              <span className="text-xl font-semibold">$18,536.43</span>
-              <span className="text-sm text-gray-400">0.84253 BTC</span>
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">{platform}</p>
+            <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-foreground">
+              <span>{accountLabel}</span>
+              <span className="text-muted-foreground">•</span>
+              <span className="text-muted-foreground">{accountNumber}</span>
+              <span className="text-muted-foreground">•</span>
+              <span className="rounded-full border border-border/60 bg-muted/30 px-2 py-0.5 text-[11px] uppercase tracking-wide text-foreground">
+                {status}
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              <StatPill label="Last sync" value={formatDate(account?.lastSyncedAt)} />
+              <StatPill label="Created" value={formatDate(account?.createdAt)} />
             </div>
           </div>
         </div>
 
-        {/* Right Section: Last Update and Action Buttons */}
-        <div className="flex items-center space-x-4">
-          <div className="text-sm text-gray-400">Last update: 45 mins ago</div>
-          
-          <button className={`p-2 rounded-full border border-gray-700 hover:bg-gray-700 transition ${accentGreen}`}>
-            <RefreshCcw className="w-5 h-5" />
-          </button>
-
-          <button className="p-1 text-gray-400 hover:text-white transition">
-            <MoreVertical className="w-6 h-6" />
-          </button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="border-border/50 bg-zinc-800/40">
+            <RefreshCcw className="size-4" />
+            Sync now
+          </Button>
+          <Button variant="ghost" size="icon">
+            <MoreVertical className="size-4" />
+          </Button>
         </div>
-      </div>
+      </CardHeader>
 
-      {/* --- Tabbed Navigation Area --- */}
-      <nav className="mt-4 flex space-x-6 border-b border-gray-700/50">
-        <Tab isActive={true} name="Summary" icon={<LayoutGrid className="w-4 h-4" />} />
-        <Tab isActive={false} name="Performance" icon={<span className="text-lg">📈</span>} />
-        <Tab isActive={false} name="Analytics" icon={<span className="text-lg">📑</span>} />
-        <Tab isActive={false} name="Reporting" icon={<span className="text-lg">📋</span>} />
-      </nav>
-    </header>
-  );
-};
+      <Separator className="bg-border/50" />
 
-export default AccountInfo;
+      <CardContent className="pt-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard label="Total Trades" value={metrics.totalTrades} icon={<Wallet className="size-4" />} />
+          <StatCard
+            label="Win Rate"
+            value={`${metrics.winRate.toFixed(2)}%`}
+            icon={<TrendingUp className="size-4" />}
+          />
+          <StatCard
+            label="Active Accounts"
+            value={`${metrics.activeAccounts}/${metrics.totalAccounts}`}
+            icon={<Gauge className="size-4" />}
+          />
+          <StatCard
+            label="Dominant Emotion"
+            value={metrics.dominantEmotion}
+            icon={<LayoutGrid className="size-4" />}
+          />
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+export default AccountInfo

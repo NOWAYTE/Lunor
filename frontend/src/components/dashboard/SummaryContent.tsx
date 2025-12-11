@@ -1,53 +1,112 @@
-import React from 'react';
+import React from 'react'
+import { TrendingUp, Award, Activity, PieChart, Layers, Sparkles } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
+import { Separator } from '~/components/ui/separator'
 
-const SummaryContent: React.FC = () => {
+type SummaryContentProps = {
+  metrics: {
+    totalTrades: number
+    winningTrades: number
+    totalPL: number
+    winRate: number
+    activeAccounts: number
+    totalAccounts: number
+    dominantEmotion: string
+  }
+}
+
+const formatUsd = (value: number) =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(value)
+
+const SummaryContent: React.FC<SummaryContentProps> = ({ metrics }) => {
+  const profitColor = metrics.totalPL >= 0 ? 'text-emerald-400' : 'text-red-400'
+
   return (
-    <div className="p-6">
-      {/* Summary Section Header */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-semibold text-white mb-1">Summary</h2>
-        <p className="text-sm text-gray-400">
-          A quick summary of your entire account on Bybit and current positions
-        </p>
+    <div className="space-y-6">
+      <div className="space-y-1">
+        <h2 className="text-2xl font-semibold text-foreground">Summary</h2>
+        <p className="text-sm text-muted-foreground">Performance snapshot across all connected accounts.</p>
       </div>
 
-      {/* Main Content Grid Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        {/* Column 1: Donut Chart Area (Takes 1/3 of the space on md screens) */}
-        <div className="col-span-1">
-          {/* Placeholder for the Donut Chart component */}
-          <div className="h-64 rounded-lg flex items-center justify-center">
-            {/* We will build this next! */}
-            <p className="text-gray-500">Donut Chart Component Placeholder</p>
-          </div>
-        </div>
-
-        {/* Column 2 & 3: Metric Cards Area (Takes 2/3 of the space on md screens) */}
-        <div className="col-span-1 md:col-span-2 space-y-4">
-          
-          {/* Top row of Metric Cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Card 1: Total Deposits */}
-            <div className="h-28 bg-[#25282f] rounded-lg shadow-md flex items-center justify-center">
-              <p className="text-gray-400">Total Deposits Card</p>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <Card className="border-border/50 bg-zinc-900/50 md:col-span-1">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-sm text-muted-foreground">
+              <PieChart className="size-4" /> Allocation
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-56 rounded-lg border border-dashed border-border/40 bg-zinc-950 text-muted-foreground grid place-items-center">
+              Donut chart coming soon
             </div>
-            
-            {/* Card 2: Total Withdrawals */}
-            <div className="h-28 bg-[#25282f] rounded-lg shadow-md flex items-center justify-center">
-              <p className="text-gray-400">Total Withdrawals Card</p>
-            </div>
-          </div>
-          
-          {/* Bottom row: Overall PNL Card (Full width under the top two) */}
-          <div className="h-28 bg-[#25282f] rounded-lg shadow-md flex items-center justify-center">
-             <p className="text-gray-400">Overall PNL Card</p>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
+        <div className="md:col-span-2 space-y-4">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <MetricCard
+              label="Total P&L"
+              value={formatUsd(metrics.totalPL)}
+              icon={<TrendingUp className="size-5" />}
+              valueClass={profitColor}
+            />
+            <MetricCard
+              label="Win Rate"
+              value={`${metrics.winRate.toFixed(2)}%`}
+              icon={<Award className="size-5" />}
+            />
+            <MetricCard
+              label="Winning Trades"
+              value={`${metrics.winningTrades}/${metrics.totalTrades || 0}`}
+              icon={<Activity className="size-5" />}
+            />
+          </div>
+
+          <Card className="border-border/50 bg-zinc-900/50">
+            <CardHeader className="flex flex-col gap-1">
+              <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
+                <Layers className="size-4" /> Accounts Overview
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div className="space-y-1">
+                <p className="text-lg font-semibold text-foreground">{metrics.activeAccounts} active</p>
+                <p className="text-sm text-muted-foreground">of {metrics.totalAccounts} connected accounts</p>
+              </div>
+              <Separator className="bg-border/30 md:hidden" />
+              <div className="flex items-center gap-2 rounded-lg border border-border/50 bg-zinc-800/30 px-3 py-2 text-sm text-foreground">
+                <Sparkles className="size-4 text-amber-300" />
+                <span className="text-muted-foreground">Dominant emotion:</span>
+                <span className="font-semibold text-foreground">{metrics.dominantEmotion}</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default SummaryContent;
+const MetricCard = ({
+  label,
+  value,
+  icon,
+  valueClass,
+}: {
+  label: string
+  value: string
+  icon: React.ReactNode
+  valueClass?: string
+}) => (
+  <Card className="border-border/50 bg-zinc-900/50">
+    <CardContent className="flex items-center gap-3 py-4">
+      <div className="rounded-lg bg-zinc-800 p-2 text-muted-foreground">{icon}</div>
+      <div>
+        <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+        <p className={`text-xl font-semibold text-foreground ${valueClass || ''}`}>{value}</p>
+      </div>
+    </CardContent>
+  </Card>
+)
+
+export default SummaryContent
